@@ -1,59 +1,66 @@
 import numpy as np
 from perlin_noise.perlin_noise import PerlinNoise
 
-cube_vertices = {
-    "left": [
+FACE_LEFT = 0
+FACE_BOTTOM = 1
+FACE_FRONT = 2
+FACE_RIGHT = 3
+FACE_TOP = 4
+FACE_BACK = 5
+
+cube_vertices = [
+    [
     -0.5,-0.5,-0.5, -0.5,-0.5, 0.5, -0.5, 0.5, 0.5,
     -0.5,-0.5,-0.5, -0.5, 0.5, 0.5, -0.5, 0.5,-0.5,
     ],
-    "bottom": [
+    [
      0.5,-0.5, 0.5, -0.5,-0.5, 0.5, -0.5,-0.5,-0.5,
      0.5,-0.5, 0.5, -0.5,-0.5,-0.5,  0.5,-0.5,-0.5,
     ],
-    "front": [    
+    [    
      0.5, 0.5,-0.5, -0.5,-0.5,-0.5, -0.5, 0.5,-0.5,
      0.5, 0.5,-0.5,  0.5,-0.5,-0.5, -0.5,-0.5,-0.5,
     ],
-    "right": [   
+    [   
      0.5, 0.5, 0.5,  0.5,-0.5,-0.5,  0.5, 0.5,-0.5,
      0.5,-0.5,-0.5,  0.5, 0.5, 0.5,  0.5,-0.5, 0.5,
     ],
-    "top": [
+    [
      0.5, 0.5, 0.5,  0.5, 0.5,-0.5, -0.5, 0.5,-0.5,
      0.5, 0.5, 0.5, -0.5, 0.5,-0.5, -0.5, 0.5, 0.5,
     ],
-    "back": [    
+    [    
      0.5, 0.5, 0.5, -0.5, 0.5, 0.5,  0.5,-0.5, 0.5,
     -0.5, 0.5, 0.5, -0.5,-0.5, 0.5,  0.5,-0.5, 0.5,
     ]
-}
+]
 
-cube_normals = {
-    "left": [
+cube_normals = [
+    [
     -1.0, 0.0, 0.0, -1.0, 0.0, 0.0, -1.0, 0.0, 0.0,
     -1.0, 0.0, 0.0, -1.0, 0.0, 0.0, -1.0, 0.0, 0.0,
     ],
-    "bottom": [
+    [
      0.0,-1.0, 0.0,  0.0,-1.0, 0.0,  0.0,-1.0, 0.0,
      0.0,-1.0, 0.0,  0.0,-1.0, 0.0,  0.0,-1.0, 0.0,
     ],
-    "front": [    
+    [    
      0.0, 0.0,-1.0,  0.0, 0.0,-1.0,  0.0, 0.0,-1.0,
      0.0, 0.0,-1.0,  0.0, 0.0,-1.0,  0.0, 0.0,-1.0,
     ],
-    "right": [   
+    [   
      1.0, 0.0, 0.0,  1.0, 0.0, 0.0,  1.0, 0.0, 0.0,
      1.0, 0.0, 0.0,  1.0, 0.0, 0.0,  1.0, 0.0, 0.0,
     ],
-    "top": [
+    [
      0.0, 1.0, 0.0,  0.0, 1.0, 0.0,  0.0, 1.0, 0.0,
      0.0, 1.0, 0.0,  0.0, 1.0, 0.0,  0.0, 1.0, 0.0,
     ],
-    "back": [    
+    [    
      0.0, 0.0, 1.0,  0.0, 0.0, 1.0,  0.0, 0.0, 1.0,
      0.0, 0.0, 1.0,  0.0, 0.0, 1.0,  0.0, 0.0, 1.0,
     ]
-}
+]
 
 def generate_chunk(seed):
     """
@@ -104,23 +111,23 @@ def compute_mesh(chunk):
                 if chunk[x,y,z] == 0.0:
                     continue
                 if x < 15 and chunk[x + 1, y, z] == 0.0:
-                    vertex_x += translate(cube_vertices["right"], x, y, z)
-                    vertex_n += cube_normals["right"]
+                    vertex_x += translate(cube_vertices[FACE_RIGHT], x, y, z)
+                    vertex_n += cube_normals[FACE_RIGHT]
                 if x > 0 and chunk[x - 1, y, z] == 0.0:
-                    vertex_x += translate(cube_vertices["left"], x, y, z)
-                    vertex_n += cube_normals["left"]
+                    vertex_x += translate(cube_vertices[FACE_LEFT], x, y, z)
+                    vertex_n += cube_normals[FACE_LEFT]
                 if y < 255 and chunk[x, y + 1, z] == 0.0:
-                    vertex_x += translate(cube_vertices["top"], x, y, z)
-                    vertex_n += cube_normals["top"]
+                    vertex_x += translate(cube_vertices[FACE_TOP], x, y, z)
+                    vertex_n += cube_normals[FACE_TOP]
                 if y > 0 and chunk[x, y - 1, z] == 0.0:
-                    vertex_x += translate(cube_vertices["bottom"], x, y, z)
-                    vertex_n += cube_normals["bottom"]
+                    vertex_x += translate(cube_vertices[FACE_BOTTOM], x, y, z)
+                    vertex_n += cube_normals[FACE_BOTTOM]
                 if z < 15 and chunk[x, y, z + 1] == 0.0:
-                    vertex_x += translate(cube_vertices["back"], x, y, z)
-                    vertex_n += cube_normals["back"]
+                    vertex_x += translate(cube_vertices[FACE_BACK], x, y, z)
+                    vertex_n += cube_normals[FACE_BACK]
                 if z > 0 and chunk[x, y, z - 1] == 0.0:
-                    vertex_x += translate(cube_vertices["front"], x, y, z)
-                    vertex_n += cube_normals["front"]
+                    vertex_x += translate(cube_vertices[FACE_FRONT], x, y, z)
+                    vertex_n += cube_normals[FACE_FRONT]
     return (np.array(vertex_x, dtype=np.float32), np.array(vertex_n, dtype=np.float32))
 
 chunk = generate_chunk(420)
