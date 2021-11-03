@@ -156,7 +156,7 @@ def render():
     glBindVertexArray(vao)
 
     angle = (time.time() * 45) % 360
-    model_x = glm.rotate(glm.radians(angle), glm.vec3(1, 1, 0))
+    model_x = glm.rotate(glm.radians(angle), glm.normalize(glm.vec3(1, 1, 1)))
     set_mat4("model_x", model_x)
 
     model_n = glm.inverse(glm.transpose(model_x))
