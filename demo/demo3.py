@@ -4,6 +4,7 @@ from OpenGL.GL import *
 from OpenGL.GL import shaders
 import numpy as np
 import glm
+import time
 from perlin_noise.perlin_noise import PerlinNoise
 
 FACE_LEFT = 0
@@ -159,6 +160,8 @@ def create_shader_program():
     #version 410
     layout (location=0) in vec3 x;
     layout (location=1) in vec3 n;
+    uniform mat4 model_x;
+    uniform mat4 model_n;
     uniform mat4 view;
     uniform mat4 projection;
     out vec3 v_color;
@@ -171,8 +174,8 @@ def create_shader_program():
     }
 
     void main() {
-        gl_Position = projection * view * vec4(x, 1.0);
-        v_color = lighting(x, n);
+        gl_Position = projection * view * model_x * vec4(x, 1.0);
+        v_color = lighting(x, (model_n * vec4(n, 1)).xyz);
     }
     """, GL_VERTEX_SHADER)
 
@@ -255,14 +258,17 @@ def render():
     glUseProgram(program)
     glBindVertexArray(vao)
 
-    model_x = glm.scale(glm.vec3(1, 1, 1))
+    model_x =  glm.translate(glm.vec3(-8, 0, -8))
+    angle = (time.time() * 22.5) % 360
+    q = glm.quat(glm.vec3(0, glm.radians(angle), 0))
+    model_x = glm.mat4(q) * model_x
     set_mat4("model_x", model_x)
 
     model_n = glm.inverse(glm.transpose(model_x))
     set_mat4("model_n", model_n)
 
-    view = glm.rotate(glm.radians(-22.5), glm.normalize(glm.vec3(1, 0, 0))) 
-    view = glm.translate(glm.vec3(8, 136, 32)) * view
+    q = glm.quat(glm.vec3(glm.radians(-22.5), 0, 0))
+    view = glm.translate(glm.vec3(0, 136, 24)) * glm.mat4(q)
     view = glm.inverse(view)
     set_mat4("view", view)
 
