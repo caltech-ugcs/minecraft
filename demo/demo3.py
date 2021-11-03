@@ -258,7 +258,9 @@ def render():
     glUseProgram(program)
     glBindVertexArray(vao)
 
+    # translate model so it is centered at origin
     model_x =  glm.translate(glm.vec3(-8, 0, -8))
+    # rotate model around origin at 22.5 degrees per second
     angle = (time.time() * 22.5) % 360
     q = glm.quat(glm.vec3(0, glm.radians(angle), 0))
     model_x = glm.mat4(q) * model_x
@@ -267,7 +269,9 @@ def render():
     model_n = glm.inverse(glm.transpose(model_x))
     set_mat4("model_n", model_n)
 
+    # Rotate camera downwards
     q = glm.quat(glm.vec3(glm.radians(-22.5), 0, 0))
+    # Move camera up and back to view ground
     view = glm.translate(glm.vec3(0, 136, 24)) * glm.mat4(q)
     view = glm.inverse(view)
     set_mat4("view", view)
