@@ -69,7 +69,7 @@ def generate_chunk(seed):
     with a height less than ground + amplitude * noise(x, z).
     """
     noise = PerlinNoise(seed=seed)
-    chunk = np.zeros((16, 256, 16))
+    chunk = np.zeros((16, 256, 16), dtype=np.int16)
     amplitude = 20
     ground = 128
     for x in range(0, 16):
@@ -110,22 +110,22 @@ def compute_mesh(chunk):
             for y in range(0, 256):
                 if chunk[x,y,z] == 0.0:
                     continue
-                if x < 15 and chunk[x + 1, y, z] == 0.0:
+                if x < 15 and chunk[x + 1, y, z] == 0:
                     vertex_x += translate(cube_vertices[FACE_RIGHT], x, y, z)
                     vertex_n += cube_normals[FACE_RIGHT]
-                if x > 0 and chunk[x - 1, y, z] == 0.0:
+                if x > 0 and chunk[x - 1, y, z] == 0:
                     vertex_x += translate(cube_vertices[FACE_LEFT], x, y, z)
                     vertex_n += cube_normals[FACE_LEFT]
-                if y < 255 and chunk[x, y + 1, z] == 0.0:
+                if y < 255 and chunk[x, y + 1, z] == 0:
                     vertex_x += translate(cube_vertices[FACE_TOP], x, y, z)
                     vertex_n += cube_normals[FACE_TOP]
-                if y > 0 and chunk[x, y - 1, z] == 0.0:
+                if y > 0 and chunk[x, y - 1, z] == 0:
                     vertex_x += translate(cube_vertices[FACE_BOTTOM], x, y, z)
                     vertex_n += cube_normals[FACE_BOTTOM]
-                if z < 15 and chunk[x, y, z + 1] == 0.0:
+                if z < 15 and chunk[x, y, z + 1] == 0:
                     vertex_x += translate(cube_vertices[FACE_BACK], x, y, z)
                     vertex_n += cube_normals[FACE_BACK]
-                if z > 0 and chunk[x, y, z - 1] == 0.0:
+                if z > 0 and chunk[x, y, z - 1] == 0:
                     vertex_x += translate(cube_vertices[FACE_FRONT], x, y, z)
                     vertex_n += cube_normals[FACE_FRONT]
     return (np.array(vertex_x, dtype=np.float32), np.array(vertex_n, dtype=np.float32))
