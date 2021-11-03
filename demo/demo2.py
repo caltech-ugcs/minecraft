@@ -3,6 +3,8 @@ from OpenGL import *
 from OpenGL.GL import *
 from OpenGL.GL import shaders
 import numpy as np
+import time
+import glm
 
 # OpenGL follows a pipeline computation model in which arrays of vertices are 
 # rendered using a shader program. A vertex array object (vao) stores the attributes
@@ -12,6 +14,9 @@ import numpy as np
 program = None
 vao = None
 
+def set_mat4(name: str, mat: glm.mat4) -> None:
+    glUniformMatrix4fv(glGetUniformLocation(program, name), 1, GL_FALSE, glm.value_ptr(mat))
+
 def create_shader_program():
     # Apply transformation to each vertex using GL shader language
     # GLSL and assign the resulting position to the gl_Position global
@@ -19,10 +24,24 @@ def create_shader_program():
     # each vertex position.
     vertexShader = shaders.compileShader("""
     #version 410
-    layout (location=0) in vec3 position;
-    void main()
-    {
-        gl_Position = vec4(position, 1.0);
+    layout (location=0) in vec3 x;
+    layout (location=1) in vec3 n;
+    uniform mat4 model_x;
+    uniform mat4 model_n;
+    out vec3 v_color;
+
+    vec3 lighting(vec3 v, vec3 n) {
+        float ambient = 0.2;
+        float diffuse = max(0.0, dot(n, vec3(0.0, 1.0, 0.0)));
+        float intensity = min(1.0, ambient + diffuse);
+        return vec3(1.0, 1.0, 1.0) * intensity;
+    }
+
+    void main() {
+        vec4 world_x = model_x * vec4(x, 1.0);
+        vec4 world_n = model_n * vec4(n, 1.0);
+        gl_Position = world_x;
+        v_color = lighting(world_x.xyz, world_n.xyz);
     }
     """, GL_VERTEX_SHADER)
 
@@ -30,10 +49,11 @@ def create_shader_program():
     # we set the color of each pixel of each triangle to white. 
     fragmentShader = shaders.compileShader("""
     #version 410
+    in vec3 v_color;
     out vec4 color;
-    void main()
-    {
-        color = vec4(1.0, 1.0, 1.0, 1.0);
+
+    void main() {
+        color = vec4(v_color, 1.0);
     }
     """, GL_FRAGMENT_SHADER)
 
@@ -50,9 +70,33 @@ def init():
     # Create an array containing the positions of the vertices of a single triangle. Note that 
     # the vertices must be specified in counter-
     vertex_position = np.array([
-        -0.5, -0.5, 0.0, # vertex 1
-        0.5, -0.5, 0.0,  # vertex 2
-        0.0,  0.5, 0.0   # vertex 3
+        -0.5,-0.5,-0.5, -0.5,-0.5, 0.5, -0.5, 0.5, 0.5,
+         0.5, 0.5,-0.5, -0.5,-0.5,-0.5, -0.5, 0.5,-0.5,
+         0.5,-0.5, 0.5, -0.5,-0.5,-0.5,  0.5,-0.5,-0.5,
+         0.5, 0.5,-0.5,  0.5,-0.5,-0.5, -0.5,-0.5,-0.5,
+        -0.5,-0.5,-0.5, -0.5, 0.5, 0.5, -0.5, 0.5,-0.5,
+         0.5,-0.5, 0.5, -0.5,-0.5, 0.5, -0.5,-0.5,-0.5,
+        -0.5, 0.5, 0.5, -0.5,-0.5, 0.5,  0.5,-0.5, 0.5,
+         0.5, 0.5, 0.5,  0.5,-0.5,-0.5,  0.5, 0.5,-0.5,
+         0.5,-0.5,-0.5,  0.5, 0.5, 0.5,  0.5,-0.5, 0.5,
+         0.5, 0.5, 0.5,  0.5, 0.5,-0.5, -0.5, 0.5,-0.5,
+         0.5, 0.5, 0.5, -0.5, 0.5,-0.5, -0.5, 0.5, 0.5,
+         0.5, 0.5, 0.5, -0.5, 0.5, 0.5,  0.5,-0.5, 0.5
+    ], dtype=np.float32)
+
+    vertex_normal = np.array([
+        -1.0, 0.0, 0.0, -1.0, 0.0, 0.0, -1.0, 0.0, 0.0, 
+         0.0, 0.0,-1.0,  0.0, 0.0,-1.0,  0.0, 0.0,-1.0,
+         0.0,-1.0, 0.0,  0.0,-1.0, 0.0,  0.0,-1.0, 0.0,
+         0.0, 0.0,-1.0,  0.0, 0.0,-1.0,  0.0, 0.0,-1.0,
+        -1.0, 0.0, 0.0, -1.0, 0.0, 0.0, -1.0, 0.0, 0.0, 
+         0.0,-1.0, 0.0,  0.0,-1.0, 0.0,  0.0,-1.0, 0.0,
+         0.0, 0.0, 1.0,  0.0, 0.0, 1.0,  0.0, 0.0, 1.0,
+         1.0, 0.0, 0.0,  1.0, 0.0, 0.0,  1.0, 0.0, 0.0, 
+         1.0, 0.0, 0.0,  1.0, 0.0, 0.0,  1.0, 0.0, 0.0, 
+         0.0, 1.0, 0.0,  0.0, 1.0, 0.0,  0.0, 1.0, 0.0,
+         0.0, 1.0, 0.0,  0.0, 1.0, 0.0,  0.0, 1.0, 0.0,
+         0.0, 0.0, 1.0,  0.0, 0.0, 1.0,  0.0, 0.0, 1.0,
     ], dtype=np.float32)
 
     # Create a vertex array object (vao) that will contain a vertex buffer object (vbo) for
@@ -63,14 +107,26 @@ def init():
     # Create a vertex buffer object (vbo) containing the position attribute for each vertex
     # of the model. Load the position data into GPU memory with GL_STATIC_DRAW storage class.
     # This indicates that the vertex positions will not be updated frequently.
-    vbo = glGenBuffers(1)
-    glBindBuffer(GL_ARRAY_BUFFER, vbo)
+    vbo_position = glGenBuffers(1)
+    glBindBuffer(GL_ARRAY_BUFFER, vbo_position)
     glBufferData(GL_ARRAY_BUFFER, vertex_position.nbytes, vertex_position, GL_STATIC_DRAW)
 
     # Assign the currently bound vertex buffer object (vbo) to the vertex attribute variable at
     # location 0 and specify its type (vec3).
     glEnableVertexAttribArray(0)
     glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 0, None)
+
+    # Create a vertex buffer object (vbo) containing the normal attribute for each vertex
+    # of the model. Load the normal data into GPU memory with GL_STATIC_DRAW storage class.
+    # This indicates that the vertex normals will not be updated frequently.
+    vbo_normal = glGenBuffers(1)
+    glBindBuffer(GL_ARRAY_BUFFER, vbo_normal)
+    glBufferData(GL_ARRAY_BUFFER, vertex_normal.nbytes, vertex_normal, GL_STATIC_DRAW)
+
+    # Assign the currently bound vertex buffer object (vbo) to the vertex attribute variable at
+    # location 0 and specify its type (vec3).
+    glEnableVertexAttribArray(1)
+    glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 0, None)
 
     program = create_shader_program()
 
@@ -93,14 +149,22 @@ def render():
     # Clear the screen with black
     glClearColor(0, 0, 0, 1)
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT)
+    glEnable(GL_DEPTH_TEST)
 
     # Enable the shader program and vertex-array-object (vao)
     glUseProgram(program)
     glBindVertexArray(vao)
 
+    angle = (time.time() * 45) % 360
+    model_x = glm.rotate(glm.radians(angle), glm.vec3(1, 1, 0))
+    set_mat4("model_x", model_x)
+
+    model_n = glm.inverse(glm.transpose(model_x))
+    set_mat4("model_n", model_n)
+
     # Draw 3 vertices from the enabled vertex-array-object (vao) using 
     # the enabled shader program.
-    glDrawArrays(GL_TRIANGLES, 0, 3)
+    glDrawArrays(GL_TRIANGLES, 0, 36)
 
     # Disable the shader program and vertex-array-object (vao)
     glBindVertexArray(0)
@@ -127,7 +191,7 @@ def main():
     # Create a SDL2 window that is drawn with a OpenGL 4.1 context. 
     # This is the most recent version of OpenGL supported by macOS.
     SDL_Init(SDL_INIT_VIDEO)
-    window = SDL_CreateWindow(b"Tutorial 1", SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, 600, 600, SDL_WINDOW_OPENGL)
+    window = SDL_CreateWindow(b"Tutorial 2", SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, 600, 600, SDL_WINDOW_OPENGL)
     SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, 4)
     SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, 1)
     SDL_GL_SetAttribute(SDL_GL_CONTEXT_PROFILE_MASK, SDL_GL_CONTEXT_PROFILE_CORE)
