@@ -150,6 +150,7 @@ def main():
     for u in range (-1, 2):
         for v in range (-1, 2):
             world.generate(u, v)
+    world.update()
     
     glBindVertexArray(world.chunks[(0, 0)].vao)
     program = create_shader_program()
