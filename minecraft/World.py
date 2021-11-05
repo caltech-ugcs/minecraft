@@ -1,30 +1,41 @@
+from .Chunk import Chunk
 
 class World:
+    """
+    A class to represent a single 'World' in the Metaverse.
+    """
+
+    # The seed that determines random world generation.
+    seed: int
+
+    # The chunks that are currently generated for this world.
+    chunks: dict[tuple[int, int], Chunk]
+
     def __init__(self, seed):
         self.seed = seed
         self.chunks = {}
-        self.visible_chunks = {}
         
-    def get_chunk(self, u, v):
-        return self.chunks[(u, v)]
-    
-    def generate_chunk(self, u, v):
+    def generate(self, u: int, v: int):
         """
-        Create a new chunk and add it to the map
-        """
-        pass
+        Generate a new Chunk with the given chunk coordinates.
 
+        Parameters:
+            u (int): the chunk coordinate in the x direction.
+            v (int): the chunk coordinate in the z direction.
+        """
+        if not (u, v) in self.chunks.keys():
+            self.chunks[(u, v)] = Chunk(self, u, v)
 
-    def update():
+    def update(self):
         """
-        Run physics engine.
-        Update self.visible_chunks
+        Update all generated chunks
         """
-        pass
+        for _, chunk in self.chunks.items():
+            chunk.update()
 
-    def draw():
+    def draw(self):
         """
-        Render self.visible_chunks using OpenGL
+        Draw all generated chunks using OpenGL
         """
-        # visible_chunks =
-        pass
+        for _, chunk in self.chunks.items():
+            chunk.draw()
