@@ -10,3 +10,8 @@ pip3 install numpy
 pip3 install glm
 pip3 install perlin-noise
 ```
+
+To install the right version, do the following:
+```
+pip3 install -r requirements.txt
+```
